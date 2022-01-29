@@ -1,0 +1,417 @@
+root: ../root #all paths are relative to this path
+affination: 1024 #global affination if needed, units can have they own affination, but pipelines would work better if they use the same affination when participating in pipelines results...
+save_runs: False
+units:
+  - id: image_loader0 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [model4_splited/train/images, model4_splited/test/images, model4_splited/valid/images] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    append_by_name_meta_data: [model4_splited/train/labels, model4_splited/test/labels, model4_splited/valid/labels] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #don't forget the point!
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+    persist_inputs: False #unit attributes for persisting the input reference in the unit input map, that is the output of the edged unit runned before
+    persist_unit: False #for not instancing the unit every time a context runs specific unit by id, it's stored in memory. This can be used for Units that does something that needs to be tracked
+
+  - id: energy_equalizer0 #also the name of the output folder relative to root
+    output_path: energy_equalizer0 #if not defined by default uses the id of the unit, but you might want to output some units in the same folder...
+    unit: energy_equalizer #receive a dataframe with info about images, another unit may receive an image directly
+    image: image #column with the path to the image to be loaded..
+    just_filter: False #don't equalize, cancel the frequencies directly...
+    std_x: 1.0 #based on the relative image size... is the std for the gaussian function, where the inflection point resides... 1 for all size/2
+    std_y: 0.0005
+    ponderation_distance_factor: 0.0334 #for merging between gaussian and a square in fourier( another gaussian and a delta the dirac in space)
+    theta_pass: 0 # [y,x] #this means we let go things in the direction of x (0, 1), and in the other direction(orthogonal or perpendicular) we use the gaussian
+    symmetry: True #this will cancel half of the transform
+    kernel_size: 5
+    affination: 0 # data resolution for the preprocessing, 0 for original size
+    normalization_value: 255 #uint8 max value of the contrasted function, 0 for keeping the [0,1] interval and float type, imageio works with floats between [0,1] as uint8 between [0, 255], if not uint8 will normalize the function interval between [0,1]
+    contrast_curve_step: [0, 0.16667, 0.83334, 1] # bezier curve for step between [0,1] the step is the image value normalized. [0, 0.3334, 0.6667, 1] for a line
+    #contrast_curve_values: [0, 0, 170, 255] #bezier curve for end value. [0, 85, 170, 255] for a line
+    double_inverse: False
+    write_output_to_disk: True #inside a path with the id of this configuration a full path with the same relative names of the original images will be created, the output is written here..
+    copy_folders: [model4_splited/train/labels, model4_splited/test/labels, model4_splited/valid/labels] #files to copy if write_output_to_disk is True
+    copy_files: [model4_splited/data.yaml]
+
+  - id: image_tags_merger0
+    unit: image_tags_merger #receive a data frame and outputs a merge between the given images
+    image: image #dataframe column for relative image path to program working directory
+    image_name: image_name
+    meta_data: meta_data
+    category: category
+    one_ponderation_per_iteration: True
+    domain: [fourier, spatial] #fourier, spatial
+    ponderation: [[direct], [inverse]] #direct, average, inverse, and maybe median, mode, std, ..
+    ponderation_distance_factor: 0.01 #for merging between the images with weights. this aims to remove interferences in specified direction
+    affination: 0 # data resolution for the preprocessing, 0 for original size, an aspect ratio merge for keeping the highest original resolution will be used if 0
+    #folders: [data/debug_images] #folders to import data, the folders inside might be used as category. the folders name might be used as folder outputs in the folder directory output if needed...
+    #copy_folders: [energy_equalizer0/model4/train/labels, energy_equalizer0/model4/test/labels, energy_equalizer0/model4/valid/labels] #files to copy if write_output_to_disk is True
+    #copy_files: [energy_equalizer0/model4/data.yaml]
+    copy_files: [energy_equalizer0/model4_splited/data.yaml]
+    write_output_to_disk: True #inside a path with the id of this configuration a full path with the same relative names of the original images will be created, the output is written here..
+
+  - id: image_loader1 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [energy_equalizer0/model4_splited/train/images, energy_equalizer0/model4_splited/test/images, energy_equalizer0/model4_splited/valid/images] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    append_by_name_meta_data: [energy_equalizer0/model4_splited/train/labels, energy_equalizer0/model4_splited/test/labels, energy_equalizer0/model4_splited/valid/labels] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #don't forget the point!
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+
+
+  - id: energy_equalizer1 #also the name of the output folder relative to root
+    unit: energy_equalizer #receive a dataframe with info about images, another unit may receive an image directly
+    image: image #column with the path to the image to be loaded..
+    just_filter: False #don't equalize, cancel the frequencies directly...
+    std_x: 1.0 #based on the relative image size... is the std for the gaussian function, where the inflection point resides... 1 for all size/2
+    std_y: 0.0005
+    ponderation_distance_factor: 0.0334 #for merging between gaussian and a square in fourier( another gaussian and a delta the dirac in space)
+    theta_pass: 0 # [y,x] #this means we let go things in the direction of x (0, 1), and in the other direction(orthogonal or perpendicular) we use the gaussian
+    symmetry: True #this will cancel half of the transform
+    kernel_size: 5
+    affination: 0 # data resolution for the preprocessing, 0 for original size
+    normalization_value: 255 #uint8 max value of the contrasted function, 0 for keeping the [0,1] interval and float type, imageio works with floats between [0,1] as uint8 between [0, 255], if not uint8 will normalize the function interval between [0,1]
+    contrast_curve_step: [0, 0.16667, 0.83334, 1] # bezier curve for step between [0,1] the step is the image value normalized. [0, 0.3334, 0.6667, 1] for a line
+    #contrast_curve_values: [0, 0, 170, 255] #bezier curve for end value. [0, 85, 170, 255] for a line
+    write_output_to_disk: True #inside a path with the id of this configuration a full path with the same relative names of the original images will be created, the output is written here..
+    #copy_folders: [image_tags_merger0/model4/train/labels, image_tags_merger0/model4/test/labels, image_tags_merger0/model4/valid/labels] #files to copy if write_output_to_disk is True
+    #copy_files: [image_tags_merger0/model4/data.yaml]
+
+  
+
+  - id: image_loader2 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [image_tags_merger0/energy_equalizer0/model4_splited/train/images, image_tags_merger0/energy_equalizer0/model4_splited/test/images, image_tags_merger0/energy_equalizer0/model4_splited/valid/images] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    append_by_name_meta_data: [image_tags_merger0/energy_equalizer0/model4_splited/train/labels, image_tags_merger0/energy_equalizer0/model4_splited/test/labels, image_tags_merger0/energy_equalizer0/model4_splited/valid/labels] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #dont forget the point, a file without extension is '' 
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+
+  - id: model_splitter0 #creates models from sources with size between group_size_from and group_size_to. receives a data_fram from image_loader_to_dataframe
+    unit: model_splitter
+    group_num: 10   
+    group_size_from: 2000 #min images size for model
+    group_size_to: 10000 #max images size for model
+    category: category #column in the dataframe to use as set to split
+    file_path: image #column with the path to the file
+    meta_data: meta_data #file metadata that needs to be merged as a child file...
+    copy_files: [image_tags_merger0/energy_equalizer0/model4_splited/data.yaml] #files to copy for every new splitted model
+
+  - id: image_loader_embedder0 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    prevent_load_errors: False #preloads de image to retrieve meta data and check for errors on load
+    image_extensions: [.bmp, .png] #loads by file extension without preventing errors, just used if prevent_load_errors is set to False
+    folders: [fg]
+    append_by_name_meta_data: [] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #dont forget the point, a file without extension is '' 
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+
+  - id: image_loader_tags_merger_embedder0 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    prevent_load_errors: False #preloads the image to retrieve meta data and check for errors on load
+    image_extensions: [.bmp, .png] #dont forget the point, loads by file extension without preventing errors, just used if prevent_load_errors is set to False
+    folders: [fg]
+    append_by_name_meta_data: [] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: [.txt] #dont forget the point, a file without extension is '' 
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+
+  - id: image_embedder0 #creates models from sources with size between group_size_from and group_size_to. receives a data_fram from image_loader_to_dataframe
+    output_path: fg
+    unit: image_embedder
+    image: image #column with the path to the file
+    affination: 256
+    what_embedding: power_harmonics #file metadata that needs to be merged as a child file...
+    cuda: False
+    load_embedding: False
+    write_output_to_disk: True
+    overwrite_output: True
+    copy_files: [] 
+
+  - id: image_tags_merger_embedder0
+    unit: image_tags_merger #receive a data frame and outputs a merge between the given images
+    output_path: '' #will store the output directly from root, use this if you want to save the merge in the same folder...
+    image: image #dataframe column for relative image path to program working directory
+    image_name: image_name
+    meta_data: meta_data
+    category: category
+    one_ponderation_per_iteration: True
+    domain: [fourier, spatial] #fourier, spatial
+    ponderation: [[direct], [inverse]] #direct, average, inverse, and maybe median, mode, std, ..
+    ponderation_distance_factor: 0.01 #for merging between the images with weights. this aims to remove interferences in specified direction
+    affination: 0 # data resolution for the preprocessing, 0 for original size, an aspect ratio merge for keeping the highest original resolution will be used if 0
+    max: 423429
+    #folders: [data/debug_images] #folders to import data, the folders inside might be used as category. the folders name might be used as folder outputs in the folder directory output if needed...
+    #copy_folders: [energy_equalizer0/model4/train/labels, energy_equalizer0/model4/test/labels, energy_equalizer0/model4/valid/labels] #files to copy if write_output_to_disk is True
+    #copy_files: [energy_equalizer0/model4/data.yaml]
+    copy_files: []
+    write_output_to_disk: True #inside a path with the id of this configuration a full path with the same relative names of the original images will be created, the output is written here..
+   
+  - id: image_loader_image_mosaic_builder0 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [fgt, bgt, background_equalized/background]
+    append_by_name_meta_data: [] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #dont forget the point, a file without extension is '' 
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+
+  - id: image_mosaic_builder0 #also the name of the output folder relative to root
+    unit: image_mosaic_builder
+    foreground_categories: [fgt, bgt] #feature category and tag for tag file...
+    foreground_proportions_per_composition: [0.1, 0.5] #a minimum space relative to the background size to fill the output image sapce with foreground
+    background_categories: [background_equalized/background]
+    category: category
+    image: image
+    total_compositions: 3000
+    write_output_to_disk: True
+
+  - id: image_loader_background0 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [background] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    append_by_name_meta_data: [] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #don't forget the point!
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+    persist_inputs: False #unit attributes for persisting the input reference in the unit input map, that is the output of the edged unit runned before
+    persist_unit: False #for not instancing the unit every time a context runs specific unit by id, it's stored in memory. This can be used for Units that does something that needs to be tracked
+
+  - id: energy_equalizer_background0 #also the name of the output folder relative to root
+    output_path: background_equalized #if not defined by default uses the id of the unit, but you might want to output some units in the same folder...
+    unit: energy_equalizer #receive a dataframe with info about images, another unit may receive an image directly
+    image: image #column with the path to the image to be loaded..
+    just_filter: False #don't equalize, cancel the frequencies directly...
+    std_x: 1.0 #based on the relative image size... is the std for the gaussian function, where the inflection point resides... 1 for all size/2
+    std_y: 0.0005
+    ponderation_distance_factor: 0.0334 #for merging between gaussian and a square in fourier( another gaussian and a delta the dirac in space)
+    theta_pass: 0 # [y,x] #this means we let go things in the direction of x (0, 1), and in the other direction(orthogonal or perpendicular) we use the gaussian
+    symmetry: True #this will cancel half of the transform
+    kernel_size: 5
+    affination: 0 # data resolution for the preprocessing, 0 for original size
+    normalization_value: 255 #uint8 max value of the contrasted function, 0 for keeping the [0,1] interval and float type, imageio works with floats between [0,1] as uint8 between [0, 255], if not uint8 will normalize the function interval between [0,1]
+    contrast_curve_step: [0.0, 0.16667, 0.83334, 1.0] # bezier curve for step between [0,1] the step is the image value normalized. [0, 0.3334, 0.6667, 1] for a line
+    #contrast_curve_values: [0, 0, 170, 255] #bezier curve for end value. [0, 85, 170, 255] for a line
+    double_inverse: False
+    write_output_to_disk: True #inside a path with the id of this configuration a full path with the same relative names of the original images will be created, the output is written here..
+    copy_folders: [] #files to copy if write_output_to_disk is True
+    copy_files: []
+
+  - id: image_loader_embedder_predictor0 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [fgt, bgt] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    append_by_name_meta_data: [] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #don't forget the point!
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+    persist_inputs: False #unit attributes for persisting the input reference in the unit input map, that is the output of the edged unit runned before
+    persist_unit: False
+
+  - id: image_embedder_predictor0 #creates models from sources with size between group_size_from and group_size_to. receives a data_fram from image_loader_to_dataframe
+    unit: image_embedder
+    image: image #column with the path to the file
+    affination: 256
+    plot_output: False
+    what_embedding: power_harmonics #file metadata that needs to be merged as a child file...
+    cuda: False
+    load_embedding: False
+    save_images: True
+    write_output_to_disk: True
+    overwrite_output: True
+    copy_files: [] 
+
+  - id: predictor0
+    unit: predictor 
+    load_predictor: False
+    hidden_layer_sizes: [518,259,37]
+    activation: tanh
+    solver: lbfgs
+    learning_rate: adaptive
+    max_iter: 200000
+    max_fun: 1500000
+    drop_columns: [image, image_name, size, width, height, meta_data]
+    target_column: category
+
+  - id: classifier0
+    unit: classifier
+    resolution_parameter: 0.001
+    recluster_num_groups: 2
+    cluster_min_group: 20
+    max_iterations: 2000
+    cluster: cluster
+    category: category
+    leidenalg: True
+    neighbours: 6
+    drop_columns: [image, image_name, size, width, height, meta_data]
+
+  - id: image_loader_test0 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [model4_splited/train/images, model4_splited/test/images, model4_splited/valid/images] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    append_by_name_meta_data: [] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #don't forget the point!
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+    persist_inputs: False #unit attributes for persisting the input reference in the unit input map, that is the output of the edged unit runned before
+    persist_unit: False #for not instancing the unit every time a context runs specific unit by id, it's stored in memory. This can be used for Units that does something that needs to be tracked
+
+  - id: energy_equalizer_test0 #also the name of the output folder relative to root
+    #output_path: energy_equalizer0 #if not defined by default uses the id of the unit, but you might want to output some units in the same folder...
+    unit: energy_equalizer #receive a dataframe with info about images, another unit may receive an image directly
+    image: image #column with the path to the image to be loaded..
+    just_filter: False #don't equalize, cancel the frequencies directly...
+    std_x: 1.0 #based on the relative image size... is the std for the gaussian function, where the inflection point resides... 1 for all size/2
+    std_y: 0.0005
+    ponderation_distance_factor: 0.0334 #for merging between gaussian and a square in fourier( another gaussian and a delta the dirac in space)
+    theta_pass: 0 # [y,x] #this means we let go things in the direction of x (0, 1), and in the other direction(orthogonal or perpendicular) we use the gaussian
+    symmetry: True #this will cancel half of the transform
+    kernel_size: 5
+    affination: 0 # data resolution for the preprocessing, 0 for original size
+    normalization_value: 255 #uint8 max value of the contrasted function, 0 for keeping the [0,1] interval and float type, imageio works with floats between [0,1] as uint8 between [0, 255], if not uint8 will normalize the function interval between [0,1]
+    contrast_curve_step: [0.0, 0.16667, 0.83334, 1.0] # bezier curve for step between [0,1] the step is the image value normalized. [0, 0.3334, 0.6667, 1] for a line
+    #contrast_curve_values: [0, 0, 170, 255] #bezier curve for end value. [0, 85, 170, 255] for a line
+    double_inverse: False
+    write_output_to_disk: True #inside a path with the id of this configuration a full path with the same relative names of the original images will be created, the output is written here..
+    copy_folders: [model4_splited/train/labels, model4_splited/test/labels, model4_splited/valid/labels] #files to copy if write_output_to_disk is True
+    copy_files: [model4_splited/data.yaml]
+
+  - id: image_loader_test1 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [energy_equalizer_test0/model4_splited/train/images, energy_equalizer_test0/model4_splited/test/images, energy_equalizer_test0/model4_splited/valid/images] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    append_by_name_meta_data: [energy_equalizer_test0/model4_splited/train/labels, energy_equalizer_test0/model4_splited/test/labels, energy_equalizer_test0/model4_splited/valid/labels] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #don't forget the point!
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+
+  - id: image_tags_merger_test0
+    unit: image_tags_merger #receive a data frame and outputs a merge between the given images
+    image: image #dataframe column for relative image path to program working directory
+    image_name: image_name
+    meta_data: meta_data
+    category: category
+    one_ponderation_per_iteration: True
+    domain: [fourier, spatial] #fourier, spatial
+    ponderation: [[direct], [inverse]] #direct, average, inverse, and maybe median, mode, std, ..
+    ponderation_distance_factor: 0.01 #for merging between the images with weights. this aims to remove interferences in specified direction
+    affination: 0 # data resolution for the preprocessing, 0 for original size, an aspect ratio merge for keeping the highest original resolution will be used if 0
+    #folders: [data/debug_images] #folders to import data, the folders inside might be used as category. the folders name might be used as folder outputs in the folder directory output if needed...
+    #copy_folders: [energy_equalizer0/model4/train/labels, energy_equalizer0/model4/test/labels, energy_equalizer0/model4/valid/labels] #files to copy if write_output_to_disk is True
+    #copy_files: [energy_equalizer0/model4/data.yaml]
+    copy_files: [energy_equalizer_test0/model4_splited/data.yaml]
+    write_output_to_disk: True #inside a path with the id of this configuration a full path with the same relative names of the original images will be created, the output is written here..
+
+  - id: image_loader_test2 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [image_tags_merger_test0/energy_equalizer_test0/model4_splited/train/images] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    prevent_load_errors: False #preloads de image to retrieve meta data and check for errors on load
+    image_extensions: [.bmp, .png] #loads by file extension without preventing errors, just used if prevent_load_errors is set to False
+    append_by_name_meta_data: [] #[energy_equalizer_test0/model4_splited/train/labels, energy_equalizer_test0/model4_splited/test/labels, energy_equalizer_test0/model4_splited/valid/labels] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #don't forget the point!
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+
+  - id: image_embedder_test0 #creates models from sources with size between group_size_from and group_size_to. receives a data_fram from image_loader_to_dataframe
+    unit: image_embedder
+    image: image #column with the path to the file
+    affination: 256
+    plot_output: False
+    what_embedding: power_harmonics #file metadata that needs to be merged as a child file...
+    cuda: False
+    load_embedding: False
+    save_images: True
+    write_output_to_disk: True
+    overwrite_output: True
+    copy_files: [] 
+  
+  - id: image_loader_test3 #also the name of the output folder relative to root
+    unit: image_loader_to_dataframe
+    folders: [image_tags_merger_test0/energy_equalizer_test0/model4_splited/train/images, image_tags_merger_test0/energy_equalizer_test0/model4_splited/test/images, image_tags_merger_test0/energy_equalizer_test0/model4_splited/valid/images] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    append_by_name_meta_data: [image_tags_merger_test0/energy_equalizer_test0/model4_splited/train/labels, image_tags_merger_test0/energy_equalizer_test0/model4_splited/test/labels, image_tags_merger_test0/energy_equalizer_test0/model4_splited/valid/labels] #[model4/train/images, model4/test/images, model4/valid/images] # [model4/train/images, model4/test/images, model4/valid/images] #folders to import data, the folder might be used as category and as an output folder inside the relative path of the unit that has the id as name...
+    meta_data_extensions: ['.txt'] #don't forget the point!
+    meta_data: meta_data
+    image: image
+    image_name: image_name
+    category: category
+    size: size
+    width: width
+    height: height
+
+  - id: model_splitter_test0 #creates models from sources with size between group_size_from and group_size_to. receives a data_fram from image_loader_to_dataframe
+    unit: model_splitter
+    group_num: 10   
+    group_size_from: 400 #min images size for model
+    group_size_to: 700 #max images size for model
+    category: category #column in the dataframe to use as set to split
+    file_path: image #column with the path to the file
+    meta_data: meta_data #file metadata that needs to be merged as a child file...
+    copy_files: [image_tags_merger_test0/energy_equalizer_test0/model4_splited/data.yaml] #files to copy for every new splitted model
+
+
+paths: #everything is a new instance(with same id... mmm... might be better if is the same instance but maybe overwrites previous outputs... ) )), the input/output id is ....?
+  #- [image_loader1, energy_equalizer0] # the input/outputs are concatened sequentially,, the path is closed/commited by the first unit 
+  #- [image_loader0, energy_equalizer0, image_loader1, image_tags_merger0, image_loader2, model_splitter0] #, image_loader1, energy_equalizer1] # the input/outputs are concatened sequentially,, the path is closed/commited by the first unit 
+  #- [image_loader1, image_tags_merger0, image_loader2, model_splitter0] #, image_loader1, energy_equalizer1] # the input/outputs are concatened sequentially,, the path is closed/commited by the first unit 
+  #- [image_loader2, model_splitter0] #, image_loader1, energy_equalizer1] # the input/outputs are concatened sequentially,, the path is closed/commited by the first unit 
+  #- [image_loader_tags_merger_embedder0, image_tags_merger_embedder0, image_loader_embedder0, image_embedder0]
+  #- [image_loader2, model_splitter0]
+  #- [ image_loader_image_mosaic_builder0, image_mosaic_builder0]
+  #- [ image_loader_test0, energy_equalizer_test0, image_loader_test1, image_tags_merger_test0, image_loader_test2, image_embedder_test0, image_loader_test3, model_splitter_test0]
+  #- [image_loader_test2, image_embedder_test0]
+  #- [image_loader_embedder_predictor0, image_embedder_predictor0, predictor0]
+  #- [image_loader_tags_merger_embedder0, image_tags_merger_embedder0, image_loader_embedder0, image_embedder0, predictor0]
+  - [image_loader_embedder0, image_embedder0]
+  #- [image_embedder0, predictor0]
+
+trees:  #NOT IMPLEMENTED YET
+  - [fourier0, fourier1]
+  - [fourier1, fourier0]
+  - [fourier0, fourier2]
